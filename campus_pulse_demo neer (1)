@@ -1,0 +1,864 @@
+import React, { useState, useEffect } from 'react';
+import {
+    Calendar, Search, PlusCircle, Users, Bell, MapPin, Clock, CheckCircle2,
+    Sparkles, ArrowRight, X, Heart, Share2, Mail, Filter, TrendingUp, ShieldCheck,
+    Menu, ChevronRight, Compass, Building2, Send, Check
+} from 'lucide-react';
+
+export default function App() {
+    const [activeTab, setActiveTab] = useState('All');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('All');
+    const [rsvpEvents, setRsvpEvents] = useState(new Set([1, 3]));
+    const [selectedEvent, setSelectedEvent] = useState(null);
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [showClubModal, setShowClubModal] = useState(false);
+    const [selectedClub, setSelectedClub] = useState(null);
+    const [showDigestModal, setShowDigestModal] = useState(false);
+    const [digestEmail, setDigestEmail] = useState('');
+    const [digestSuccess, setDigestSuccess] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    // Initial Mock Events Data
+    const [events, setEvents] = useState([
+        {
+            id: 1,
+            title: 'AI & Generative Hackathon 2026',
+            club: 'Google Developer Student Club',
+            clubLogo: 'https://placehold.co/100x100/4285F4/ffffff?text=GDSC',
+            date: 'Oct 12, 2026',
+            time: '10:00 AM - 6:00 PM',
+            location: 'Tech Auditorium, Block 4',
+            category: 'Tech',
+            image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80',
+            description: 'Build innovative generative AI applications in teams of up to 4. Mentors from top tech companies will be live on site. Exciting cash prizes and cloud credits worth $5,000 to be won!',
+            rsvps: 142,
+            capacity: 200,
+            featured: true
+        },
+        {
+            id: 2,
+            title: 'Annual Cultural Night: Rhythms 2026',
+            club: 'Cultural Society',
+            clubLogo: 'https://placehold.co/100x100/EC4899/ffffff?text=CS',
+            date: 'Oct 15, 2026',
+            time: '5:30 PM - 10:00 PM',
+            location: 'Main Open Air Theatre',
+            category: 'Cultural',
+            image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80',
+            description: 'An evening filled with electrifying dance performances, acoustic live bands, fashion show, and celebrity guest judges. Food trucks will be parked around the arena.',
+            rsvps: 380,
+            capacity: 500,
+            featured: true
+        },
+        {
+            id: 3,
+            title: 'Venture Pitching & Angel Meetup',
+            club: 'Entrepreneurship Cell',
+            clubLogo: 'https://placehold.co/100x100/8B5CF6/ffffff?text=E-Cell',
+            date: 'Oct 18, 2026',
+            time: '2:00 PM - 5:00 PM',
+            location: 'Management Seminar Hall',
+            category: 'Entrepreneurship',
+            image: 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=800&q=80',
+            description: 'Pitch your startup idea directly to angel investors and campus alumni founders. Get live feedback, funding opportunities, and networking with seasoned entrepreneurs.',
+            rsvps: 95,
+            capacity: 120,
+            featured: false
+        },
+        {
+            id: 4,
+            title: 'Inter-College Basketball Championship',
+            club: 'Sports Council',
+            clubLogo: 'https://placehold.co/100x100/F59E0B/ffffff?text=SC',
+            date: 'Oct 20, 2026',
+            time: '4:00 PM onwards',
+            location: 'Indoor Sports Complex',
+            category: 'Sports',
+            image: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=800&q=80',
+            description: 'Witness the ultimate showdown as the top 8 college teams compete for the championship trophy. Cheer for your departmental favorites!',
+            rsvps: 210,
+            capacity: 350,
+            featured: false
+        },
+        {
+            id: 5,
+            title: 'RoboWars & Drone Racing Expo',
+            club: 'IEEE Student Branch',
+            clubLogo: 'https://placehold.co/100x100/3B82F6/ffffff?text=IEEE',
+            date: 'Oct 22, 2026',
+            time: '11:00 AM - 4:00 PM',
+            location: 'Mechanical Workshop Arena',
+            category: 'Tech',
+            image: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=800&q=80',
+            description: 'Combat robots battling in the arena and high-speed FPV drone racing through obstacle courses. Special guest showcase by robotics industry veterans.',
+            rsvps: 164,
+            capacity: 250,
+            featured: false
+        },
+        {
+            id: 6,
+            title: 'Open Mic Poetry & Indie Jam',
+            club: 'Literary & Arts Club',
+            clubLogo: 'https://placehold.co/100x100/10B981/ffffff?text=LAC',
+            date: 'Oct 25, 2026',
+            time: '6:00 PM - 8:30 PM',
+            location: 'Student Activity Centre Amphitheatre',
+            category: 'Cultural',
+            image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80',
+            description: 'Share your original poetry, stand-up comedy, or acoustic tunes under the fairy lights. Cozy coffee and snacks will be served.',
+            rsvps: 78,
+            capacity: 100,
+            featured: false
+        }
+    ]);
+
+    // Participating Clubs Data
+    const clubs = [
+        {
+            id: 'gdsc',
+            name: 'Google Developer Student Club',
+            logo: 'https://placehold.co/100x100/4285F4/ffffff?text=GDSC',
+            category: 'Tech & Coding',
+            members: '1,200+ Members',
+            activeEvents: 4,
+            bio: 'Helping students bridge the gap between theory and practice through hands-on hackathons, workshops, and real-world projects.',
+            instagram: '@gdsc_campus'
+        },
+        {
+            id: 'cs',
+            name: 'Cultural Society',
+            logo: 'https://placehold.co/100x100/EC4899/ffffff?text=CS',
+            category: 'Arts & Performance',
+            members: '2,500+ Members',
+            activeEvents: 6,
+            bio: 'The heartbeat of campus life. We organize the biggest fests, dance battles, dramatics, and musical nights.',
+            instagram: '@campus_culturals'
+        },
+        {
+            id: 'ecell',
+            name: 'Entrepreneurship Cell',
+            logo: 'https://placehold.co/100x100/8B5CF6/ffffff?text=E-Cell',
+            category: 'Business & Startups',
+            members: '980+ Members',
+            activeEvents: 3,
+            bio: 'Fostering the startup mindset on campus with speaker sessions, seed funding bootcamps, and venture pitch days.',
+            instagram: '@ecell_official'
+        },
+        {
+            id: 'sports',
+            name: 'Sports Council',
+            logo: 'https://placehold.co/100x100/F59E0B/ffffff?text=SC',
+            category: 'Athletics & Fitness',
+            members: '3,100+ Members',
+            activeEvents: 5,
+            bio: 'Promoting active campus living through inter-departmental tournaments, marathon leagues, and fitness camps.',
+            instagram: '@campus_sports'
+        },
+        {
+            id: 'ieee',
+            name: 'IEEE Student Branch',
+            logo: 'https://placehold.co/100x100/3B82F6/ffffff?text=IEEE',
+            category: 'Engineering & Research',
+            members: '850+ Members',
+            activeEvents: 2,
+            bio: 'Advancing technology for humanity through technical conclaves, robotics workshops, and research paper symposiums.',
+            instagram: '@ieee_branch'
+        }
+    ];
+
+    // New Event Form State
+    const [newEvent, setNewEvent] = useState({
+        title: '',
+        club: 'Google Developer Student Club',
+        date: '',
+        time: '',
+        location: '',
+        category: 'Tech',
+        description: '',
+        capacity: 150,
+        image: 'https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&w=800&q=80'
+    });
+
+    const toggleRsvp = (id, e) => {
+        if (e) e.stopPropagation();
+        const updated = new Set(rsvpEvents);
+        setEvents(events.map(ev => {
+            if (ev.id === id) {
+                if (updated.has(id)) {
+                    updated.delete(id);
+                    return { ...ev, rsvps: ev.rsvps - 1 };
+                } else {
+                    updated.add(id);
+                    return { ...ev, rsvps: ev.rsvps + 1 };
+                }
+            }
+            return ev;
+        }));
+        setRsvpEvents(updated);
+    };
+
+    const handleCreateEvent = (e) => {
+        e.preventDefault();
+        if (!newEvent.title || !newEvent.date || !newEvent.location) return;
+
+        const created = {
+            id: events.length + 1,
+            ...newEvent,
+            clubLogo: clubs.find(c => c.name === newEvent.club)?.logo || 'https://placehold.co/100x100/6366F1/ffffff?text=Club',
+            rsvps: 12,
+            featured: false
+        };
+
+        setEvents([created, ...events]);
+        setShowCreateModal(false);
+        setNewEvent({
+            title: '',
+            club: 'Google Developer Student Club',
+            date: '',
+            time: '',
+            location: '',
+            category: 'Tech',
+            description: '',
+            capacity: 150,
+            image: 'https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&w=800&q=80'
+        });
+    };
+
+    const filteredEvents = events.filter(ev => {
+        const matchesSearch = ev.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            ev.club.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            ev.description.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCategory = selectedCategory === 'All' || ev.category === selectedCategory;
+        return matchesSearch && matchesCategory;
+    });
+
+    return (
+        <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-indigo-500 selection:text-white pb-24">
+
+            { }
+            <header className="sticky top-0 z-40 backdrop-blur-md bg-slate-900/80 border-b border-slate-800 transition-all">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+
+                    {/* Logo & Brand */}
+                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('All')}>
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                            <Sparkles className="w-5 h-5 text-white animate-pulse" />
+                        </div>
+                        <div>
+                            <span className="text-xl font-black tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-300 bg-clip-text text-transparent">
+                                Campus Pulse
+                            </span>
+                            <span className="block text-[10px] font-semibold text-indigo-400 uppercase tracking-widest">
+                                Unified Event Discovery
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Desktop Nav Items */}
+                    <nav className="hidden md:flex items-center gap-8">
+                        <button
+                            onClick={() => setActiveTab('All')}
+                            className={`text-sm font-medium transition-colors hover:text-indigo-400 ${activeTab === 'All' ? 'text-indigo-400 font-semibold' : 'text-slate-300'}`}
+                        >
+                            Explore Calendar
+                        </button>
+                        <button
+                            onClick={() => setShowClubModal(true)}
+                            className="text-sm font-medium text-slate-300 hover:text-indigo-400 transition-colors flex items-center gap-1.5"
+                        >
+                            <Users className="w-4 h-4" /> Clubs directory
+                        </button>
+                        <button
+                            onClick={() => setShowDigestModal(true)}
+                            className="text-sm font-medium text-slate-300 hover:text-indigo-400 transition-colors flex items-center gap-1.5"
+                        >
+                            <Mail className="w-4 h-4" /> Weekly Digest
+                        </button>
+                    </nav>
+
+                    {/* Action Buttons */}
+                    <div className="hidden sm:flex items-center gap-3">
+                        <button
+                            onClick={() => setShowCreateModal(true)}
+                            className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-medium px-4 py-2.5 rounded-xl shadow-lg shadow-indigo-600/20 text-sm flex items-center gap-2 transition-all transform active:scale-95"
+                        >
+                            <PlusCircle className="w-4 h-4" /> Post Event
+                        </button>
+                        <div className="h-6 w-[1px] bg-slate-800"></div>
+                        <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl">
+                            <div className="w-7 h-7 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center text-xs font-bold text-white shadow">
+                                JS
+                            </div>
+                            <div className="text-left hidden lg:block">
+                                <span className="block text-xs font-semibold text-slate-200">John Student</span>
+                                <span className="block text-[10px] text-emerald-400 flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Verified
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Mobile Menu Button */}
+                    <button
+                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                        className="md:hidden p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300"
+                    >
+                        {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                    </button>
+                </div>
+
+                {/* Mobile Dropdown */}
+                {mobileMenuOpen && (
+                    <div className="md:hidden bg-slate-900 border-b border-slate-800 px-4 py-6 space-y-4 shadow-xl animate-in slide-in-from-top">
+                        <button
+                            onClick={() => { setActiveTab('All'); setMobileMenuOpen(false); }}
+                            className="w-full text-left py-2 px-3 rounded-lg hover:bg-slate-800 text-slate-200 font-medium"
+                        >
+                            Explore Calendar
+                        </button>
+                        <button
+                            onClick={() => { setShowClubModal(true); setMobileMenuOpen(false); }}
+                            className="w-full text-left py-2 px-3 rounded-lg hover:bg-slate-800 text-slate-200 font-medium flex items-center gap-2"
+                        >
+                            <Users className="w-4 h-4" /> Clubs Directory
+                        </button>
+                        <button
+                            onClick={() => { setShowDigestModal(true); setMobileMenuOpen(false); }}
+                            className="w-full text-left py-2 px-3 rounded-lg hover:bg-slate-800 text-slate-200 font-medium flex items-center gap-2"
+                        >
+                            <Mail className="w-4 h-4" /> Weekly Digest
+                        </button>
+                        <div className="pt-2 border-t border-slate-800 flex flex-col gap-2">
+                            <button
+                                onClick={() => { setShowCreateModal(true); setMobileMenuOpen(false); }}
+                                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-xl flex items-center justify-center gap-2 shadow"
+                            >
+                                <PlusCircle className="w-4 h-4" /> Post Event
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </header>
+
+            { }
+            <section className="relative overflow-hidden pt-12 pb-16 border-b border-slate-900 bg-gradient-to-b from-indigo-950/20 via-slate-950 to-slate-950">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[350px] bg-indigo-600/10 blur-[120px] rounded-full pointer-events-none"></div>
+
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                    <div className="grid lg:grid-cols-12 gap-12 items-center">
+
+                        <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
+                            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold tracking-wide uppercase">
+                                <ShieldCheck className="w-4 h-4" /> Official Campus Event Portal
+                            </div>
+
+                            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.1]">
+                                One place for <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">everything</span> happening on campus.
+                            </h1>
+
+                            <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto lg:mx-0">
+                                Never miss another hackathon, cultural night, or speaker summit. Discover events, RSVP with one click, and get automated Monday morning digests.
+                            </p>
+
+                            {/* Search Bar & Filters */}
+                            <div className="space-y-4 max-w-xl mx-auto lg:mx-0 pt-2">
+                                <div className="relative flex items-center">
+                                    <Search className="absolute left-4 w-5 h-5 text-slate-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search events, clubs, workshops, or venues..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="w-full bg-slate-900/90 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 shadow-inner transition-all"
+                                    />
+                                    {searchQuery && (
+                                        <button onClick={() => setSearchQuery('')} className="absolute right-4 text-slate-400 hover:text-white">
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Category Pills */}
+                                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 pt-1">
+                                    {['All', 'Tech', 'Cultural', 'Entrepreneurship', 'Sports'].map(cat => (
+                                        <button
+                                            key={cat}
+                                            onClick={() => setSelectedCategory(cat)}
+                                            className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${selectedCategory === cat ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-slate-900 text-slate-400 border border-slate-800 hover:text-slate-200 hover:border-slate-700'}`}
+                                        >
+                                            {cat}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Hero Stats / Live Activity Card */}
+                        <div className="lg:col-span-5">
+                            <div className="bg-gradient-to-br from-slate-900 to-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl"></div>
+
+                                <div className="flex items-center justify-between pb-6 border-b border-slate-800">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></div>
+                                        <span className="text-sm font-bold text-slate-200">Live Campus Pulse</span>
+                                    </div>
+                                    <span className="text-xs bg-indigo-500/20 text-indigo-300 font-semibold px-2.5 py-1 rounded-lg">
+                                        Fall Semester 2026
+                                    </span>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-4 py-6 text-center">
+                                    <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80">
+                                        <span className="block text-2xl font-black text-indigo-400">24+</span>
+                                        <span className="text-[11px] text-slate-400 font-medium">Active Clubs</span>
+                                    </div>
+                                    <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80">
+                                        <span className="block text-2xl font-black text-purple-400">18</span>
+                                        <span className="text-[11px] text-slate-400 font-medium">Events This Week</span>
+                                    </div>
+                                    <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80">
+                                        <span className="block text-2xl font-black text-pink-400">1.4k</span>
+                                        <span className="text-[11px] text-slate-400 font-medium">Total RSVPs</span>
+                                    </div>
+                                </div>
+
+                                <div className="bg-indigo-950/40 border border-indigo-500/20 rounded-2xl p-4 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-xl bg-indigo-600/20 flex items-center justify-center text-indigo-400">
+                                            <Mail className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-xs font-bold text-slate-200">Monday Morning Digest</h4>
+                                            <p className="text-[11px] text-slate-400">Next drop: Monday, 8:00 AM</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowDigestModal(true)}
+                                        className="text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-2 rounded-xl transition-all shadow"
+                                    >
+                                        Subscribe
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            { }
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+                    <div>
+                        <h2 className="text-2xl font-black text-white flex items-center gap-2">
+                            <Calendar className="w-6 h-6 text-indigo-400" /> Upcoming Campus Events
+                        </h2>
+                        <p className="text-sm text-slate-400">Browse verified club events and secure your spot instantly.</p>
+                    </div>
+                    <div className="text-sm text-slate-400 flex items-center gap-2">
+                        <span>Showing <strong className="text-white">{filteredEvents.length}</strong> events</span>
+                        {selectedCategory !== 'All' && <span>in <strong className="text-indigo-400">{selectedCategory}</strong></span>}
+                    </div>
+                </div>
+
+                {filteredEvents.length === 0 ? (
+                    <div className="text-center py-20 bg-slate-900/40 border border-slate-800/80 rounded-3xl p-8">
+                        <Compass className="w-12 h-12 text-slate-600 mx-auto mb-4 animate-spin" />
+                        <h3 className="text-lg font-bold text-slate-300">No events found</h3>
+                        <p className="text-sm text-slate-500 mt-1">Try adjusting your search terms or category filters.</p>
+                        <button
+                            onClick={() => { setSearchQuery(''); setSelectedCategory('All'); }}
+                            className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-medium"
+                        >
+                            Reset Filters
+                        </button>
+                    </div>
+                ) : (
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredEvents.map(event => {
+                            const isRsvp = rsvpEvents.has(event.id);
+                            return (
+                                <div
+                                    key={event.id}
+                                    onClick={() => setSelectedEvent(event)}
+                                    className="group bg-slate-900/90 border border-slate-800 hover:border-indigo-500/50 rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 flex flex-col cursor-pointer transform hover:-translate-y-1"
+                                >
+                                    {/* Card Cover Image */}
+                                    <div className="relative h-48 w-full overflow-hidden bg-slate-950">
+                                        <img
+                                            src={event.image}
+                                            alt={event.title}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
+                                            onError={(e) => { e.target.src = 'https://placehold.co/800x400/1e293b/ffffff?text=Campus+Event'; }}
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
+
+                                        {/* Category Badge */}
+                                        <span className="absolute top-4 left-4 bg-slate-950/80 backdrop-blur-md border border-slate-800 text-indigo-300 text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow">
+                                            {event.category}
+                                        </span>
+
+                                        {/* Club Tag */}
+                                        <div className="absolute bottom-4 left-4 flex items-center gap-2">
+                                            <img src={event.clubLogo} alt={event.club} className="w-7 h-7 rounded-lg border border-slate-700 object-cover shadow" />
+                                            <span className="text-xs font-semibold text-white drop-shadow">{event.club}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Card Content */}
+                                    <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+                                        <div>
+                                            <h3 className="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors line-clamp-1">
+                                                {event.title}
+                                            </h3>
+                                            <p className="text-xs text-slate-400 mt-2 line-clamp-2 leading-relaxed">
+                                                {event.description}
+                                            </p>
+                                        </div>
+
+                                        <div className="space-y-2 pt-2 border-t border-slate-800/80 text-xs text-slate-300">
+                                            <div className="flex items-center gap-2">
+                                                <Clock className="w-3.5 h-3.5 text-indigo-400" />
+                                                <span>{event.date} • {event.time}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <MapPin className="w-3.5 h-3.5 text-pink-400" />
+                                                <span className="truncate">{event.location}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* RSVP Bar */}
+                                        <div className="flex items-center justify-between pt-2">
+                                            <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                                                <Users className="w-3.5 h-3.5 text-purple-400" />
+                                                <span><strong className="text-white">{event.rsvps}</strong> attending</span>
+                                            </div>
+
+                                            <button
+                                                onClick={(e) => toggleRsvp(event.id, e)}
+                                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${isRsvp
+                                                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm'
+                                                        : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/30'
+                                                    }`}
+                                            >
+                                                {isRsvp ? <><Check className="w-3.5 h-3.5" /> RSVP'd ✓</> : 'RSVP Now'}
+                                            </button>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </main>
+
+            { }
+            {selectedEvent && (
+                <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in">
+                    <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl relative my-8">
+                        <button
+                            onClick={() => setSelectedEvent(null)}
+                            className="absolute top-4 right-4 z-10 p-2 rounded-full bg-slate-950/80 border border-slate-800 text-slate-300 hover:text-white"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div className="relative h-64 w-full bg-slate-950">
+                            <img src={selectedEvent.image} alt={selectedEvent.title} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/30 to-transparent"></div>
+                            <span className="absolute top-4 left-4 bg-slate-950/80 border border-slate-800 text-indigo-300 text-xs font-bold px-3.5 py-1 rounded-full uppercase">
+                                {selectedEvent.category}
+                            </span>
+                        </div>
+
+                        <div className="p-6 sm:p-8 space-y-6">
+                            <div className="flex items-center gap-3">
+                                <img src={selectedEvent.clubLogo} alt={selectedEvent.club} className="w-10 h-10 rounded-xl border border-slate-700 object-cover" />
+                                <div>
+                                    <h4 className="text-sm font-semibold text-slate-400">{selectedEvent.club}</h4>
+                                    <h2 className="text-2xl font-black text-white">{selectedEvent.title}</h2>
+                                </div>
+                            </div>
+
+                            <div className="grid sm:grid-cols-2 gap-4 bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-indigo-600/10 text-indigo-400 flex items-center justify-center">
+                                        <Clock className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <span className="block text-xs text-slate-400">Date & Time</span>
+                                        <span className="text-xs font-bold text-white">{selectedEvent.date}</span>
+                                        <span className="block text-[11px] text-slate-400">{selectedEvent.time}</span>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-pink-600/10 text-pink-400 flex items-center justify-center">
+                                        <MapPin className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <span className="block text-xs text-slate-400">Location</span>
+                                        <span className="text-xs font-bold text-white">{selectedEvent.location}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 className="text-sm font-bold text-slate-200 mb-2">About Event</h3>
+                                <p className="text-sm text-slate-300 leading-relaxed">
+                                    {selectedEvent.description}
+                                </p>
+                            </div>
+
+                            <div className="flex items-center justify-between pt-4 border-t border-slate-800">
+                                <div className="flex items-center gap-2 text-xs text-slate-400">
+                                    <Users className="w-4 h-4 text-purple-400" />
+                                    <span><strong className="text-white">{selectedEvent.rsvps}</strong> students RSVP'd (Capacity: {selectedEvent.capacity})</span>
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        onClick={() => toggleRsvp(selectedEvent.id)}
+                                        className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg flex items-center gap-2 ${rsvpEvents.has(selectedEvent.id)
+                                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                                                : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/30'
+                                            }`}
+                                    >
+                                        {rsvpEvents.has(selectedEvent.id) ? <><Check className="w-4 h-4" /> RSVP'd Successfully ✓</> : 'Confirm RSVP'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            { }
+            {showCreateModal && (
+                <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in">
+                    <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl relative my-8">
+                        <button
+                            onClick={() => setShowCreateModal(false)}
+                            className="absolute top-4 right-4 p-2 rounded-full bg-slate-950/80 border border-slate-800 text-slate-300 hover:text-white"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-10 h-10 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center">
+                                <PlusCircle className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-black text-white">Post an Event</h3>
+                                <p className="text-xs text-slate-400">Simulate club officer dashboard (Live preview)</p>
+                            </div>
+                        </div>
+
+                        <form onSubmit={handleCreateEvent} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-300 mb-1">Event Title</label>
+                                <input
+                                    type="text"
+                                    required
+                                    placeholder="e.g. AI Prompt Engineering Workshop"
+                                    value={newEvent.title}
+                                    onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 px-3.5 text-slate-100 text-sm focus:outline-none focus:border-indigo-500"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-300 mb-1">Organizing Club</label>
+                                    <select
+                                        value={newEvent.club}
+                                        onChange={(e) => setNewEvent({ ...newEvent, club: e.target.value })}
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 px-3.5 text-slate-100 text-sm focus:outline-none focus:border-indigo-500"
+                                    >
+                                        {clubs.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-300 mb-1">Category</label>
+                                    <select
+                                        value={newEvent.category}
+                                        onChange={(e) => setNewEvent({ ...newEvent, category: e.target.value })}
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 px-3.5 text-slate-100 text-sm focus:outline-none focus:border-indigo-500"
+                                    >
+                                        <option value="Tech">Tech</option>
+                                        <option value="Cultural">Cultural</option>
+                                        <option value="Entrepreneurship">Entrepreneurship</option>
+                                        <option value="Sports">Sports</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-300 mb-1">Date</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        placeholder="e.g. Nov 2, 2026"
+                                        value={newEvent.date}
+                                        onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 px-3.5 text-slate-100 text-sm focus:outline-none focus:border-indigo-500"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-300 mb-1">Time</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        placeholder="e.g. 4:00 PM - 6:00 PM"
+                                        value={newEvent.time}
+                                        onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}
+                                        className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 px-3.5 text-slate-100 text-sm focus:outline-none focus:border-indigo-500"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-300 mb-1">Location / Venue</label>
+                                <input
+                                    type="text"
+                                    required
+                                    placeholder="e.g. Auditorium Hall 2"
+                                    value={newEvent.location}
+                                    onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 px-3.5 text-slate-100 text-sm focus:outline-none focus:border-indigo-500"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-300 mb-1">Description</label>
+                                <textarea
+                                    rows="3"
+                                    placeholder="Write a short summary of the event..."
+                                    value={newEvent.description}
+                                    onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 px-3.5 text-slate-100 text-sm focus:outline-none focus:border-indigo-500 resize-none"
+                                ></textarea>
+                            </div>
+
+                            <div className="pt-2">
+                                <button
+                                    type="submit"
+                                    className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2"
+                                >
+                                    Publish Event Live <Send className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            { }
+            {showClubModal && (
+                <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in">
+                    <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl relative my-8">
+                        <button
+                            onClick={() => setShowClubModal(false)}
+                            className="absolute top-4 right-4 p-2 rounded-full bg-slate-950/80 border border-slate-800 text-slate-300 hover:text-white"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-10 h-10 rounded-xl bg-purple-600/20 text-purple-400 flex items-center justify-center">
+                                <Building2 className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-black text-white">Campus Clubs Directory</h3>
+                                <p className="text-xs text-slate-400">Verified student organizations powering campus life</p>
+                            </div>
+                        </div>
+
+                        <div className="grid sm:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-2">
+                            {clubs.map(club => (
+                                <div key={club.id} className="bg-slate-950/70 border border-slate-800 p-4 rounded-2xl flex flex-col justify-between space-y-3">
+                                    <div className="flex items-center gap-3">
+                                        <img src={club.logo} alt={club.name} className="w-12 h-12 rounded-xl object-cover border border-slate-700 shadow" />
+                                        <div>
+                                            <h4 className="text-sm font-bold text-white">{club.name}</h4>
+                                            <span className="text-[11px] text-indigo-400 font-medium">{club.category}</span>
+                                        </div>
+                                    </div>
+                                    <p className="text-xs text-slate-300 leading-relaxed">{club.bio}</p>
+                                    <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 text-[11px] text-slate-400">
+                                        <span>{club.members}</span>
+                                        <span className="text-emerald-400 font-semibold">{club.activeEvents} Active Events</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            { }
+            {showDigestModal && (
+                <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in">
+                    <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative text-center">
+                        <button
+                            onClick={() => { setShowDigestModal(false); setDigestSuccess(false); }}
+                            className="absolute top-4 right-4 p-2 rounded-full bg-slate-950/80 border border-slate-800 text-slate-300 hover:text-white"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div className="w-12 h-12 rounded-2xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center mx-auto mb-4">
+                            <Mail className="w-6 h-6" />
+                        </div>
+
+                        <h3 className="text-xl font-black text-white">The Monday Morning Digest</h3>
+                        <p className="text-xs text-slate-300 mt-2 leading-relaxed">
+                            Get a curated list of every upcoming event, hackathon, and fest delivered to your inbox every Monday at 8:00 AM sharp. No spam.
+                        </p>
+
+                        {digestSuccess ? (
+                            <div className="mt-6 bg-emerald-500/20 border border-emerald-500/40 p-4 rounded-2xl text-emerald-300 text-xs font-semibold flex items-center justify-center gap-2">
+                                <CheckCircle2 className="w-4 h-4" /> You're subscribed! Check your inbox on Monday.
+                            </div>
+                        ) : (
+                            <form onSubmit={(e) => { e.preventDefault(); if (digestEmail) setDigestSuccess(true); }} className="mt-6 space-y-3">
+                                <input
+                                    type="email"
+                                    required
+                                    placeholder="Enter your student email..."
+                                    value={digestEmail}
+                                    onChange={(e) => setDigestEmail(e.target.value)}
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 px-4 text-slate-100 text-sm focus:outline-none focus:border-indigo-500 text-center"
+                                />
+                                <button
+                                    type="submit"
+                                    className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2"
+                                >
+                                    Subscribe to Weekly Digest <Sparkles className="w-4 h-4" />
+                                </button>
+                            </form>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            { }
+            <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-20 pt-8 border-t border-slate-900 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                    <p>© 2026 Campus Pulse. Built for student communities.</p>
+                </div>
+                <div className="flex items-center gap-6">
+                    <button onClick={() => setShowClubModal(true)} className="hover:text-slate-300 transition-colors">Clubs</button>
+                    <button onClick={() => setShowDigestModal(true)} className="hover:text-slate-300 transition-colors">Weekly Digest</button>
+                    <button onClick={() => setShowCreateModal(true)} className="hover:text-slate-300 transition-colors">Post Event</button>
+                </div>
+            </footer>
+
+        </div>
+    );
+}
